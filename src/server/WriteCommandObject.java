@@ -29,7 +29,7 @@ public class WriteCommandObject {
 		//
 		for (SocketChannel channel: clients) {
 			//DEBUG
-			System.out.println("Writing "+buffer.toString()+" to " + channel.toString());
+			//System.out.println("Writing "+buffer.toString()+" to " + channel.toString());
 
 			if (!broadcastMode && channel.equals(source)) {
 				//Skip the sender if we are in nonatomic broadcast

@@ -174,6 +174,7 @@ public class Assignment1Client implements Client {
 	}
 
 	public static void main(String[] args) {
+		args = ClientArgsProcessor.removeEmpty(args);
 		launchClient(ClientArgsProcessor.getServerHost(args), ClientArgsProcessor.getServerPort(args),
 				ClientArgsProcessor.getClientName(args));
 

@@ -150,6 +150,7 @@ public class Assignment1Server implements Server {
 		BeanTraceUtility.setTracing();
 		NIOTraceUtility.setTracing();
 		Assignment1Server aServer = new Assignment1Server();
+		args = ServerArgsProcessor.removeEmpty(args);
 		aServer.initialize(ServerArgsProcessor.getServerPort(args));
 	}
 

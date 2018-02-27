@@ -21,6 +21,7 @@ public class ParameterListener implements SimulationParametersListener {
 	@Override
 	public void ipcMechanism(IPCMechanism newValue) {
 		System.out.println("ipcMechanism " + newValue);
+		client.setIPC(newValue);
 	}
 
 	@Override
@@ -36,19 +37,9 @@ public class ParameterListener implements SimulationParametersListener {
 	}
 
 	@Override
-	public void broadcastBroadcastMode(boolean newValue) {
-		System.out.println("broadcastBroadcastMode " + newValue);
-	}
-
-	@Override
 	public void waitForBroadcastConsensus(boolean newValue) {
 		System.out.println("waitForBroadcastConsensus " + newValue);
 
-	}
-
-	@Override
-	public void broadcastIPCMechanism(boolean newValue) {
-		System.out.println("broadcastIPCMechanism " + newValue);
 	}
 
 	@Override
@@ -71,6 +62,16 @@ public class ParameterListener implements SimulationParametersListener {
 	public void simulationCommand(String aCommand) {
 		System.out.println("Simulation command: " + aCommand);
 		client.setInputString(aCommand);
+	}
+
+	@Override
+	public void broadcastMetaState(boolean newValue) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void delaySends(int aMillisecondDelay) {
+		// TODO Auto-generated method stub		
 	}
 
 }

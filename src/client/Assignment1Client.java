@@ -2,6 +2,9 @@ package client;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.channels.SocketChannel;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import assignments.util.mainArgs.ClientArgsProcessor;
@@ -9,18 +12,23 @@ import inputport.nio.manager.NIOManagerFactory;
 import inputport.nio.manager.factories.classes.AReadingWritingConnectCommandFactory;
 import inputport.nio.manager.factories.selectors.ConnectCommandFactorySelector;
 import main.BeauAndersonFinalProject;
+import server.IAmInterface;
+import server.RMICommandIntf;
+import server.RMIValues;
 import stringProcessors.HalloweenCommandProcessor;
 import util.annotations.Tags;
+import util.interactiveMethodInvocation.IPCMechanism;
 import util.tags.DistributedTags;
 import util.trace.bean.BeanTraceUtility;
 import util.trace.factories.FactoryTraceUtility;
 import util.trace.port.PerformanceExperimentEnded;
 import util.trace.port.PerformanceExperimentStarted;
 import util.trace.port.nio.NIOTraceUtility;
+import util.trace.port.rpc.rmi.RMITraceUtility;
 
 @Tags({ DistributedTags.CLIENT })
 
-public class Assignment1Client implements Client {
+public class Assignment1Client implements Client, RMIValues {
 	private static final int COMMAND_QUEUE_SIZE = 1000;
 	private static final int EXPERIMENT_TRIALS = 1000;
 	
@@ -33,6 +41,10 @@ public class Assignment1Client implements Client {
 	private Thread commandExecutor;
 	private BroadcastMode mode;
 	private SimulationConsoleListener consoleListener;
+	private ClientCallbackInf rmiCallback;
+	private IAmInterface identity;
+	private RMICommandIntf command;
+	private IPCMechanism ipc = IPCMechanism.RMI;
 	String clientName;
 	SocketChannel socketChannel;
 	
@@ -57,6 +69,7 @@ public class Assignment1Client implements Client {
 	public void initialize(String aServerHost, int aServerPort) {
 		createSimulation();
 		setFactories();
+		setupRMI();
 		socketChannel = createSocketChannel();
 		commandQueue = new ArrayBlockingQueue<ClientCommandObject>(COMMAND_QUEUE_SIZE);
 		createCommunicationObjects();
@@ -66,6 +79,18 @@ public class Assignment1Client implements Client {
 		consoleListener = new SimulationConsoleListener();
 		consoleListener.addSimulationParameterListener(new ParameterListener(this));
 		consoleListener.processCommands();
+	}
+	
+	protected void setupRMI() {
+		try {
+			rmiCallback = new ClientCallback(this);
+			Registry rmiRegistry = LocateRegistry.getRegistry(REGISTRY_PORT_NUMBER);
+			identity = (IAmInterface) rmiRegistry.lookup(IAM);
+			command = (RMICommandIntf) rmiRegistry.lookup(COMMAND);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	/**
@@ -79,7 +104,7 @@ public class Assignment1Client implements Client {
 
 	@Override
 	public void connected(SocketChannel theSocketChannel) {
-		System.out.println("Ready to send messages to server");
+		//System.out.println("Ready to send messages to server");
 	}
 
 	@Override
@@ -112,7 +137,7 @@ public class Assignment1Client implements Client {
 	 * Class for sending messages
 	 */
 	protected void createSender() {
-		clientSender = new ACommandClientSender(socketChannel, clientName, mode);
+		clientSender = new ACommandClientSender(socketChannel, command, this);
 	}
 
 	/**
@@ -141,6 +166,11 @@ public class Assignment1Client implements Client {
 	@Override
 	public void connectToServer(String aServerHost, int aServerPort) {
 		connectToSocketChannel(aServerHost, aServerPort);
+		try {
+			identity.IAm(clientName, rmiCallback);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
 	}
 
 	protected void connectToSocketChannel(String aServerHost, int aServerPort) {
@@ -169,6 +199,7 @@ public class Assignment1Client implements Client {
 		FactoryTraceUtility.setTracing();
 		BeanTraceUtility.setTracing();
 		NIOTraceUtility.setTracing();
+		RMITraceUtility.setTracing();
 		Client aClient = new Assignment1Client(aClientName);
 		aClient.initialize(aServerHost, aServerPort);
 	}
@@ -179,23 +210,39 @@ public class Assignment1Client implements Client {
 				ClientArgsProcessor.getClientName(args));
 
 	}
+	
+	@Override
+	public void executeCommand(String command) {
+		commandProcessor.processCommand(command);
+	}
 
 	@Override
 	public void setLocal(boolean local) {
 		this.mode = local == true ? BroadcastMode.local : BroadcastMode.atomic;
-		clientSender.setBroadcastMode(mode);
 		commandProcessor.setConnectedToSimulation(true);
 	}
 
 	@Override
 	public void setAtomic(boolean atomic) {
 		this.mode = atomic == true ? BroadcastMode.atomic : BroadcastMode.nonatomic;
-		clientSender.setBroadcastMode(mode);
 		if (atomic) {
 			commandProcessor.setConnectedToSimulation(false);
 		} else {
 			commandProcessor.setConnectedToSimulation(true);
 		}
+		
+		if (ipc == IPCMechanism.RMI) {
+			try {
+				command.sendCommand("mode", "", atomic);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	@Override
+	public String getName() {
+		return clientName;
 	}
 	
 	@Override
@@ -226,6 +273,21 @@ public class Assignment1Client implements Client {
 		end = System.nanoTime();
 		duration = end-start;
 		PerformanceExperimentEnded.newCase(this, start, end, duration, EXPERIMENT_TRIALS);
-		System.out.println("Experiment took: " + (double)(duration/1000000000.0));
+		//System.out.println("Experiment took: " + (double)(duration/1000000000.0));
+	}
+
+	@Override
+	public boolean getAtomic() {
+		return this.mode == BroadcastMode.atomic ? true : false;
+	}
+
+	@Override
+	public IPCMechanism getIPC() {
+		return this.ipc;
+	}
+
+	@Override
+	public void setIPC(IPCMechanism newValue) {
+		this.ipc = newValue;
 	}
 }

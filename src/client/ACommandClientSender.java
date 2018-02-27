@@ -2,34 +2,47 @@ package client;
 import java.beans.PropertyChangeEvent;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.rmi.RemoteException;
 
 import inputport.nio.manager.NIOManagerFactory;
+import server.RMICommandIntf;
+import util.interactiveMethodInvocation.IPCMechanism;
 
 public class ACommandClientSender implements CommandClientSender {
 	private final int atomic = 1;
 	private final int nonatomic = 0;
 	SocketChannel socketChannel;
-	String clientName;
-	BroadcastMode broadcastMode;
-	public ACommandClientSender(SocketChannel aSocketChannel, String aClientName, BroadcastMode mode) {
+	RMICommandIntf command;
+	private Client client;
+	public ACommandClientSender(SocketChannel aSocketChannel, RMICommandIntf command, Client client) {
 		socketChannel = aSocketChannel;	
-		clientName = aClientName;
-		broadcastMode = mode;
-	}
-	
-	public void setBroadcastMode(BroadcastMode mode) {
-		this.broadcastMode = mode;
+		this.command = command;
+		this.client = client;
 	}
 	
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (evt.getPropertyName().equals("InputString")) {
-			if (broadcastMode == BroadcastMode.atomic) {
-				ByteBuffer aMeaningByteBuffer = ByteBuffer.wrap((Integer.toString(atomic) + evt.getNewValue()).getBytes());
-				NIOManagerFactory.getSingleton().write(socketChannel, aMeaningByteBuffer);	
-			} else if (broadcastMode == BroadcastMode.nonatomic) {
-				ByteBuffer aMeaningByteBuffer = ByteBuffer.wrap((Integer.toString(nonatomic) + evt.getNewValue()).getBytes());
-				NIOManagerFactory.getSingleton().write(socketChannel, aMeaningByteBuffer);	
+			if (client.getIPC() == IPCMechanism.RMI) {
+				//RMI
+				try {
+					String message = (String) evt.getNewValue();
+					if(!client.getAtomic())
+						client.executeCommand(message);
+					command.sendCommand(client.getName(), message, client.getAtomic());
+
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			} else {
+				//NIO
+				if (client.getMode() == BroadcastMode.atomic) {
+					ByteBuffer aMeaningByteBuffer = ByteBuffer.wrap((Integer.toString(atomic) + evt.getNewValue()).getBytes());
+					NIOManagerFactory.getSingleton().write(socketChannel, aMeaningByteBuffer);	
+				} else if (client.getMode() == BroadcastMode.nonatomic) {
+					ByteBuffer aMeaningByteBuffer = ByteBuffer.wrap((Integer.toString(nonatomic) + evt.getNewValue()).getBytes());
+					NIOManagerFactory.getSingleton().write(socketChannel, aMeaningByteBuffer);	
+				}
 			}
 		}		
 	}

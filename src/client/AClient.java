@@ -7,6 +7,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import assignments.util.inputParameters.AnAbstractSimulationParametersBean;
 import assignments.util.mainArgs.ClientArgsProcessor;
 import inputport.nio.manager.NIOManagerFactory;
 import inputport.nio.manager.factories.classes.AReadingWritingConnectCommandFactory;
@@ -28,7 +29,7 @@ import util.trace.port.rpc.rmi.RMITraceUtility;
 
 @Tags({ DistributedTags.CLIENT })
 
-public class Assignment1Client implements Client, RMIValues {
+public class AClient extends AnAbstractSimulationParametersBean implements Client, RMIValues {
 	private static final int COMMAND_QUEUE_SIZE = 1000;
 	private static final int EXPERIMENT_TRIALS = 1000;
 	
@@ -39,7 +40,6 @@ public class Assignment1Client implements Client, RMIValues {
 	private ArrayBlockingQueue<ClientCommandObject> commandQueue;
 	private ClientCommandRunnable commandRunnable;
 	private Thread commandExecutor;
-	private BroadcastMode mode;
 	private SimulationConsoleListener consoleListener;
 	private ClientCallbackInf rmiCallback;
 	private IAmInterface identity;
@@ -50,7 +50,7 @@ public class Assignment1Client implements Client, RMIValues {
 	
 	public static final String READ_THREAD_NAME = "Read Thread";
 
-	public Assignment1Client(String name) {
+	public AClient(String name) {
 		clientName = name;
 	}
 	
@@ -99,7 +99,7 @@ public class Assignment1Client implements Client, RMIValues {
 	protected void createSimulation() {
 		commandProcessor = BeauAndersonFinalProject.createSimulation(clientName, 0, 0, 1200, 765, 100, 100);
 		commandProcessor.setConnectedToSimulation(false);
-		mode = BroadcastMode.atomic;
+		this.setAtomic(true);
 	}
 
 	@Override
@@ -200,7 +200,7 @@ public class Assignment1Client implements Client, RMIValues {
 		BeanTraceUtility.setTracing();
 		NIOTraceUtility.setTracing();
 		RMITraceUtility.setTracing();
-		Client aClient = new Assignment1Client(aClientName);
+		Client aClient = new AClient(aClientName);
 		aClient.initialize(aServerHost, aServerPort);
 	}
 
@@ -218,13 +218,13 @@ public class Assignment1Client implements Client, RMIValues {
 
 	@Override
 	public void setLocal(boolean local) {
-		this.mode = local == true ? BroadcastMode.local : BroadcastMode.atomic;
+		this.setLocal(local);
 		commandProcessor.setConnectedToSimulation(true);
 	}
 
 	@Override
 	public void setAtomic(boolean atomic) {
-		this.mode = atomic == true ? BroadcastMode.atomic : BroadcastMode.nonatomic;
+		this.setAtomicBroadcast(atomic);
 		if (atomic) {
 			commandProcessor.setConnectedToSimulation(false);
 		} else {
@@ -233,7 +233,7 @@ public class Assignment1Client implements Client, RMIValues {
 		
 		if (ipc == IPCMechanism.RMI) {
 			try {
-				command.sendCommand("mode", "", atomic);
+				command.sendCommand("mode","", atomic);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -248,14 +248,6 @@ public class Assignment1Client implements Client, RMIValues {
 	@Override
 	public void setInputString(String input) {
 		commandProcessor.setInputString(input);
-	}
-	
-	public void setMode(BroadcastMode mode) {
-		this.mode = mode;
-	}
-	
-	public BroadcastMode getMode() {
-		return this.mode;
 	}
 	
 	@Override
@@ -277,11 +269,6 @@ public class Assignment1Client implements Client, RMIValues {
 	}
 
 	@Override
-	public boolean getAtomic() {
-		return this.mode == BroadcastMode.atomic ? true : false;
-	}
-
-	@Override
 	public IPCMechanism getIPC() {
 		return this.ipc;
 	}
@@ -289,5 +276,15 @@ public class Assignment1Client implements Client, RMIValues {
 	@Override
 	public void setIPC(IPCMechanism newValue) {
 		this.ipc = newValue;
+	}
+
+	@Override
+	public boolean getAtomic() {
+		return this.isAtomicBroadcast();
+	}
+
+	@Override
+	public boolean getLocal() {
+		return this.isLocalProcessingOnly();
 	}
 }

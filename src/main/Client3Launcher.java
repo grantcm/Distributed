@@ -1,14 +1,14 @@
 package main;
 
 import assignments.util.mainArgs.ClientArgsProcessor;
-import client.Assignment1Client;
+import client.AClient;
 import util.trace.port.nio.NIOTraceUtility;
 
 public class Client3Launcher {
 	private static final String clientName = "client";
 	public static void main(String[] args) {
 		NIOTraceUtility.setTracing();
-		Assignment1Client.launchClient(ClientArgsProcessor.getServerHost(args)
+		AClient.launchClient(ClientArgsProcessor.getServerHost(args)
 				, ClientArgsProcessor.getServerPort(args),
 				clientName + String.valueOf(3));
 

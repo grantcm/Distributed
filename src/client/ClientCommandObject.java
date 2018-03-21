@@ -7,26 +7,26 @@ import stringProcessors.HalloweenCommandProcessor;
 public class ClientCommandObject {
 
 	private HalloweenCommandProcessor commandProcessor;
-	private BroadcastMode executionMode;
+	private boolean atomic;
 	private ByteBuffer buffer;
 
 	public ClientCommandObject(HalloweenCommandProcessor aCommandProcessor, ByteBuffer buffer,
-			BroadcastMode executionMode) {
+			boolean atomic) {
 		commandProcessor = aCommandProcessor;
 		this.buffer = buffer;
-		this.executionMode = executionMode;
+		this.atomic = atomic;
 	}
 
 	public void execute() {
 
-		if (executionMode == BroadcastMode.atomic) {
+		if (atomic) {
 			commandProcessor.setConnectedToSimulation(true);
 		}
 
 		String command = new String(buffer.array(), buffer.position(), buffer.remaining());
 		commandProcessor.processCommand(command);
 
-		if (executionMode == BroadcastMode.atomic) {
+		if (atomic) {
 			commandProcessor.setConnectedToSimulation(false);
 		}
 	}

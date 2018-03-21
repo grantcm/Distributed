@@ -22,10 +22,10 @@ public class ACommandClientReceiver implements CommandClientReceiver {
 		ClientCommandObject command;
 		if (aMessage.get() == '0') {
 			parent.setAtomic(false);
-			command = new ClientCommandObject(commandProcessor, aMessage, parent.getMode());
+			command = new ClientCommandObject(commandProcessor, aMessage, parent.getAtomic());
 		} else {
 			parent.setAtomic(true);
-			command = new ClientCommandObject(commandProcessor, aMessage, parent.getMode());
+			command = new ClientCommandObject(commandProcessor, aMessage, parent.getAtomic());
 		}
 		commandQueue.add(command);
 	}

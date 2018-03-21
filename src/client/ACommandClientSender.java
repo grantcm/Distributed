@@ -23,28 +23,29 @@ public class ACommandClientSender implements CommandClientSender {
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (evt.getPropertyName().equals("InputString")) {
-			if (client.getIPC() == IPCMechanism.RMI) {
-				//RMI
-				try {
-					String message = (String) evt.getNewValue();
-					if(!client.getAtomic())
-						client.executeCommand(message);
-					command.sendCommand(client.getName(), message, client.getAtomic());
+			if (!client.getLocal()) {
+				if (client.getIPC() == IPCMechanism.RMI) {
+					//RMI
+					try {
+						String message = (String) evt.getNewValue();
+						if(!client.getAtomic())
+							client.executeCommand(message);
+						command.sendCommand(client.getName(), message, client.getAtomic());
 
-				} catch (RemoteException e) {
-					e.printStackTrace();
-				}
-			} else {
-				//NIO
-				if (client.getMode() == BroadcastMode.atomic) {
-					ByteBuffer aMeaningByteBuffer = ByteBuffer.wrap((Integer.toString(atomic) + evt.getNewValue()).getBytes());
-					NIOManagerFactory.getSingleton().write(socketChannel, aMeaningByteBuffer);	
-				} else if (client.getMode() == BroadcastMode.nonatomic) {
-					ByteBuffer aMeaningByteBuffer = ByteBuffer.wrap((Integer.toString(nonatomic) + evt.getNewValue()).getBytes());
-					NIOManagerFactory.getSingleton().write(socketChannel, aMeaningByteBuffer);	
-				}
-			}
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					}
+				} else {
+					//NIO
+					if (client.getAtomic()) {
+						ByteBuffer aMeaningByteBuffer = ByteBuffer.wrap((Integer.toString(atomic) + evt.getNewValue()).getBytes());
+						NIOManagerFactory.getSingleton().write(socketChannel, aMeaningByteBuffer);	
+					} else {
+						ByteBuffer aMeaningByteBuffer = ByteBuffer.wrap((Integer.toString(nonatomic) + evt.getNewValue()).getBytes());
+						NIOManagerFactory.getSingleton().write(socketChannel, aMeaningByteBuffer);	
+					}
+				}	
+			}	
 		}		
 	}
-
 }

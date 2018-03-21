@@ -218,13 +218,13 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 
 	@Override
 	public void setLocal(boolean local) {
-		this.setLocal(local);
+		this.localProcessingOnly(local);
 		commandProcessor.setConnectedToSimulation(true);
 	}
 
 	@Override
 	public void setAtomic(boolean atomic) {
-		this.setAtomicBroadcast(atomic);
+		this.atomicBroadcast(atomic);;
 		if (atomic) {
 			commandProcessor.setConnectedToSimulation(false);
 		} else {

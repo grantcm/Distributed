@@ -3,6 +3,11 @@ package server;
 import java.rmi.registry.LocateRegistry;
 import java.util.Scanner;
 
+import util.annotations.Tags;
+import util.tags.DistributedTags;
+
+@Tags({DistributedTags.REGISTRY})
+
 public class RMIRegistry implements RMIValues{
 	public static void main (String[] args) {
 		try {

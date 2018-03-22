@@ -27,7 +27,7 @@ import util.trace.port.PerformanceExperimentStarted;
 import util.trace.port.nio.NIOTraceUtility;
 import util.trace.port.rpc.rmi.RMITraceUtility;
 
-@Tags({ DistributedTags.CLIENT })
+@Tags({ DistributedTags.CLIENT, DistributedTags.RMI, DistributedTags.NIO, DistributedTags.GIPC })
 
 public class AClient extends AnAbstractSimulationParametersBean implements Client, RMIValues {
 	private static final int COMMAND_QUEUE_SIZE = 1000;
@@ -97,9 +97,9 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	 * Default to atomic simulation mode
 	 **/
 	protected void createSimulation() {
-		commandProcessor = BeauAndersonFinalProject.createSimulation(clientName, 0, 0, 1200, 765, 100, 100);
+		commandProcessor = BeauAndersonFinalProject.createSimulation(clientName, 0, 0, 400, 200, 100, 100);
 		commandProcessor.setConnectedToSimulation(false);
-		this.setAtomic(true);
+		this.atomicBroadcast = true;
 	}
 
 	@Override

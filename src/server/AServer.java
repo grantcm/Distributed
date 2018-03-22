@@ -27,6 +27,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import inputport.nio.manager.NIOManagerFactory;
 import inputport.nio.manager.factories.classes.AReadingAcceptCommandFactory;
 import inputport.nio.manager.factories.selectors.AcceptCommandFactorySelector;
+import inputport.rpc.GIPCLocateRegistry;
+import inputport.rpc.GIPCRegistry;
+import port.ATracingConnectionListener;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
@@ -37,17 +40,19 @@ import java.rmi.server.UnicastRemoteObject;
 
 import assignments.util.mainArgs.ServerArgsProcessor;
 import client.ClientCallbackInf;
-import util.trace.port.nio.NIOTraceUtility;
+import util.trace.port.consensus.ConsensusTraceUtility;
 import util.trace.port.nio.SocketChannelBound;
+import util.trace.port.rpc.gipc.GIPCRPCTraceUtility;
 import util.trace.port.rpc.rmi.RMITraceUtility;
 import util.trace.bean.BeanTraceUtility;
 import util.trace.factories.FactoryTraceUtility;
+import util.trace.misc.ThreadDelayed;
 import util.annotations.Tags;
 import util.tags.DistributedTags;
 
-@Tags({ DistributedTags.SERVER })
+@Tags({ DistributedTags.SERVER, DistributedTags.RMI, DistributedTags.GIPC, DistributedTags.NIO })
 
-public class Assignment1Server implements Server, RMIValues {
+public class AServer implements Server, RMIValues {
 
 	private static final int COMMAND_QUEUE_SIZE = 10000;
 	private ArrayBlockingQueue<WriteCommandObject> commandQueue;
@@ -56,12 +61,13 @@ public class Assignment1Server implements Server, RMIValues {
 	private ArrayList<SocketChannel> clients;
 	private Runnable readCommand;
 	private Thread readThread;
+	private GIPCRegistry gipcRegistry;
 
 	private Map<String, ClientCallbackInf> RMIClients;
 	
 	public static final String READ_THREAD_NAME = "Read Thread";
 
-	public Assignment1Server() {
+	public AServer() {
 
 	}
 
@@ -134,6 +140,11 @@ public class Assignment1Server implements Server, RMIValues {
 		createCommunicationObjects();
 		makeServerConnectable();
 		readThread.start();
+		setupRMIRegistry();
+		setupGIPCRegistry();
+	}
+	
+	private void setupRMIRegistry() {
 		try {
 			Registry rmiRegistry = LocateRegistry.getRegistry(REGISTRY_PORT_NUMBER);
 			IAmInterface identity = new IAmCommand(this);
@@ -143,8 +154,18 @@ public class Assignment1Server implements Server, RMIValues {
 			rmiRegistry.rebind(IAM, identity);
 			rmiRegistry.rebind(COMMAND, command);
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
+	}
+	
+	private void setupGIPCRegistry() {
+		gipcRegistry = GIPCLocateRegistry.createRegistry(GIPC_SERVER_PORT);
+		//Need to rebind class for clients to make proposals
+		//gipcRegistry.rebind(PROPOSAL,);	
+		gipcRegistry.getInputPort()
+		.addConnectionListener(new ATracingConnectionListener(gipcRegistry.getInputPort()));
+		//Next need to create object for keeping track of client callbacks
+		//for queries that waits for boolean response
+		//Finally need a final send method for clients to process changes
 	}
 
 	/**
@@ -169,9 +190,11 @@ public class Assignment1Server implements Server, RMIValues {
 	public static void main(String[] args) {
 		FactoryTraceUtility.setTracing();
 		BeanTraceUtility.setTracing();
-		NIOTraceUtility.setTracing();
 		RMITraceUtility.setTracing();
-		Assignment1Server aServer = new Assignment1Server();
+		ConsensusTraceUtility.setTracing();
+		ThreadDelayed.enablePrint();
+		GIPCRPCTraceUtility.setTracing();
+		AServer aServer = new AServer();
 		args = ServerArgsProcessor.removeEmpty(args);
 		aServer.initialize(ServerArgsProcessor.getServerPort(args));
 	}

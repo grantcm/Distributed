@@ -72,7 +72,7 @@ public class Assignment1Client implements Client {
 	 * Default to atomic simulation mode
 	 **/
 	protected void createSimulation() {
-		commandProcessor = BeauAndersonFinalProject.createSimulation(clientName, 0, 0, 1200, 765, 100, 100);
+		commandProcessor = BeauAndersonFinalProject.createSimulation(clientName, 0, 0, 400, 220, 100, 100);
 		commandProcessor.setConnectedToSimulation(false);
 		mode = BroadcastMode.atomic;
 	}
@@ -215,7 +215,7 @@ public class Assignment1Client implements Client {
 	public void runExperiment(){
 		long end, duration;
 		long start = System.nanoTime();
-		String command = "move 1 1";
+		String command = "move 1 0";
 
 		PerformanceExperimentStarted.newCase(this, start, EXPERIMENT_TRIALS);
 		

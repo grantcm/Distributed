@@ -47,7 +47,7 @@ import util.tags.DistributedTags;
 
 @Tags({ DistributedTags.SERVER })
 
-public class Assignment1Server implements Server, RMIValues {
+public class AServer implements Server, RMIValues {
 
 	private static final int COMMAND_QUEUE_SIZE = 10000;
 	private ArrayBlockingQueue<WriteCommandObject> commandQueue;
@@ -61,7 +61,7 @@ public class Assignment1Server implements Server, RMIValues {
 	
 	public static final String READ_THREAD_NAME = "Read Thread";
 
-	public Assignment1Server() {
+	public AServer() {
 
 	}
 
@@ -171,7 +171,7 @@ public class Assignment1Server implements Server, RMIValues {
 		BeanTraceUtility.setTracing();
 		NIOTraceUtility.setTracing();
 		RMITraceUtility.setTracing();
-		Assignment1Server aServer = new Assignment1Server();
+		AServer aServer = new AServer();
 		args = ServerArgsProcessor.removeEmpty(args);
 		aServer.initialize(ServerArgsProcessor.getServerPort(args));
 	}

@@ -99,7 +99,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	protected void createSimulation() {
 		commandProcessor = BeauAndersonFinalProject.createSimulation(clientName, 0, 0, 1200, 765, 100, 100);
 		commandProcessor.setConnectedToSimulation(false);
-		this.setAtomic(true);
+		this.atomicBroadcast(true);
 	}
 
 	@Override
@@ -224,7 +224,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 
 	@Override
 	public void setAtomic(boolean atomic) {
-		this.atomicBroadcast(atomic);;
+		this.atomicBroadcast(atomic);
 		if (atomic) {
 			commandProcessor.setConnectedToSimulation(false);
 		} else {

@@ -40,6 +40,7 @@ import java.rmi.server.UnicastRemoteObject;
 
 import assignments.util.mainArgs.ServerArgsProcessor;
 import client.ClientCallbackInf;
+import client.GIPCClientCallback;
 import util.trace.port.consensus.ConsensusTraceUtility;
 import util.trace.port.nio.SocketChannelBound;
 import util.trace.port.rpc.gipc.GIPCRPCTraceUtility;
@@ -48,6 +49,8 @@ import util.trace.bean.BeanTraceUtility;
 import util.trace.factories.FactoryTraceUtility;
 import util.trace.misc.ThreadDelayed;
 import util.annotations.Tags;
+import util.interactiveMethodInvocation.ConsensusAlgorithm;
+import util.interactiveMethodInvocation.IPCMechanism;
 import util.tags.DistributedTags;
 
 @Tags({ DistributedTags.SERVER, DistributedTags.RMI, DistributedTags.GIPC, DistributedTags.NIO })
@@ -64,6 +67,7 @@ public class AServer implements Server, RMIValues {
 	private GIPCRegistry gipcRegistry;
 
 	private Map<String, ClientCallbackInf> RMIClients;
+	private Map<String, GIPCClientCallback> GIPCClients;
 	
 	public static final String READ_THREAD_NAME = "Read Thread";
 
@@ -157,15 +161,41 @@ public class AServer implements Server, RMIValues {
 		}
 	}
 	
+	/**
+	 * GIPC Section
+	 */
+	
 	private void setupGIPCRegistry() {
+		GIPCClients = new HashMap<>();
 		gipcRegistry = GIPCLocateRegistry.createRegistry(GIPC_SERVER_PORT);
-		//Need to rebind class for clients to make proposals
-		//gipcRegistry.rebind(PROPOSAL,);	
+		GIPCProposal proposal = new AGIPCProposal(this);
+		gipcRegistry.rebind(PROPOSAL, proposal);	
 		gipcRegistry.getInputPort()
 		.addConnectionListener(new ATracingConnectionListener(gipcRegistry.getInputPort()));
-		//Next need to create object for keeping track of client callbacks
-		//for queries that waits for boolean response
-		//Finally need a final send method for clients to process changes
+	}
+	
+	@Override
+	public void proposeAtomicBroadcast(Boolean newValue) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void proposeIPCMechanism(IPCMechanism newValue) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+
+	@Override
+	public void proposeConsensusAlgorithm(ConsensusAlgorithm newValue) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void proposeCommand(String command) {
+		
 	}
 
 	/**
@@ -213,9 +243,20 @@ public class AServer implements Server, RMIValues {
 			return true;
 		}
 	}
+	
+	@Override
+	public boolean addGIPCClient(String name, GIPCClientCallback callback) {
+		if (GIPCClients.containsKey(name)) {
+			return false;
+		} else {
+			GIPCClients.put(name, callback);
+			return true;
+		}
+	}
 
 	@Override
 	public Map<String, ClientCallbackInf> getRMIClients() {
 		return RMIClients;
 	}
+
 }

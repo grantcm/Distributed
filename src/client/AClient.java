@@ -12,7 +12,10 @@ import assignments.util.mainArgs.ClientArgsProcessor;
 import inputport.nio.manager.NIOManagerFactory;
 import inputport.nio.manager.factories.classes.AReadingWritingConnectCommandFactory;
 import inputport.nio.manager.factories.selectors.ConnectCommandFactorySelector;
+import inputport.rpc.GIPCLocateRegistry;
+import inputport.rpc.GIPCRegistry;
 import main.BeauAndersonFinalProject;
+import server.GIPCProposal;
 import server.IAmInterface;
 import server.RMICommandIntf;
 import server.RMIValues;
@@ -44,7 +47,9 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	private ClientCallbackInf rmiCallback;
 	private IAmInterface identity;
 	private RMICommandIntf command;
-	private IPCMechanism ipc = IPCMechanism.RMI;
+	private IPCMechanism ipc = IPCMechanism.GIPC;
+	private GIPCClientCallback gipcCallback;
+	private GIPCProposal proposal;
 	String clientName;
 	SocketChannel socketChannel;
 	
@@ -70,6 +75,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 		createSimulation();
 		setFactories();
 		setupRMI();
+		setupGIPC();
 		socketChannel = createSocketChannel();
 		commandQueue = new ArrayBlockingQueue<ClientCommandObject>(COMMAND_QUEUE_SIZE);
 		createCommunicationObjects();
@@ -82,15 +88,27 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	}
 	
 	protected void setupRMI() {
+		if (this.getIPC() == IPCMechanism.RMI) {
+			try {
+				rmiCallback = new ClientCallback(this);
+				Registry rmiRegistry = LocateRegistry.getRegistry(REGISTRY_PORT_NUMBER);
+				identity = (IAmInterface) rmiRegistry.lookup(IAM);
+				command = (RMICommandIntf) rmiRegistry.lookup(COMMAND);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	protected void setupGIPC() {
 		try {
-			rmiCallback = new ClientCallback(this);
-			Registry rmiRegistry = LocateRegistry.getRegistry(REGISTRY_PORT_NUMBER);
-			identity = (IAmInterface) rmiRegistry.lookup(IAM);
-			command = (RMICommandIntf) rmiRegistry.lookup(COMMAND);
+			gipcCallback = new GIPCClientCallback(this);
+			GIPCRegistry gipcRegistry = GIPCLocateRegistry.getRegistry(HOSTNAME, 
+															GIPC_SERVER_PORT, this.getName());
+			proposal = (GIPCProposal) gipcRegistry.lookup(GIPCProposal.class, PROPOSAL);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	/**
@@ -137,7 +155,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	 * Class for sending messages
 	 */
 	protected void createSender() {
-		clientSender = new ACommandClientSender(socketChannel, command, this);
+		clientSender = new ACommandClientSender(socketChannel, command, proposal, this);
 	}
 
 	/**
@@ -166,8 +184,16 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	@Override
 	public void connectToServer(String aServerHost, int aServerPort) {
 		connectToSocketChannel(aServerHost, aServerPort);
+		if (this.getIPC() == IPCMechanism.RMI) {
+			try {
+				identity.IAm(clientName, rmiCallback);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		try {
-			identity.IAm(clientName, rmiCallback);
+			proposal.introduceClient(this.getName(), gipcCallback);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
@@ -286,5 +312,10 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	@Override
 	public boolean getLocal() {
 		return this.isLocalProcessingOnly();
+	}
+
+	@Override
+	public boolean isWaitForConsensusAlgorithm() {
+		return this.consensusAlgorithm == null ? true : false;
 	}
 }

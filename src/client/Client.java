@@ -1,8 +1,9 @@
 package client;
+import assignments.util.inputParameters.SimulationParametersBean;
 import inputport.nio.manager.listeners.SocketChannelConnectListener;
 import util.interactiveMethodInvocation.IPCMechanism;
 
-public interface Client extends SocketChannelConnectListener {
+public interface Client extends SocketChannelConnectListener, SimulationParametersBean {
 	public void connectToServer(String aServerHost, int aServerPort);
 	public void initialize(String aServerHost, int aServerPort);
 	public void setInputString(String input);
@@ -15,4 +16,5 @@ public interface Client extends SocketChannelConnectListener {
 	public String getName();
 	public void executeCommand(String command);
 	public void runExperiment();
+	public boolean isWaitForConsensusAlgorithm();
 }

@@ -29,7 +29,12 @@ public class ACommandClientSender implements CommandClientSender {
 			if (!client.getLocal()) {
 				if (client.getIPC() == IPCMechanism.GIPC) {
 					//GIPC
-					proposal.proposeCommand((String) evt.getNewValue());
+					try {
+						proposal.proposeCommand((String) evt.getNewValue());
+					} catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				} else if (client.getIPC() == IPCMechanism.RMI) {
 					//RMI
 					try {

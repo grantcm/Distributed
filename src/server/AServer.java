@@ -65,14 +65,15 @@ public class AServer implements Server, RMIValues {
 	private Runnable readCommand;
 	private Thread readThread;
 	private GIPCRegistry gipcRegistry;
+	private ConsensusAlgorithm consensusAlgorithm;
 
 	private Map<String, ClientCallbackInf> RMIClients;
 	private Map<String, GIPCClientCallback> GIPCClients;
-	
+
 	public static final String READ_THREAD_NAME = "Read Thread";
 
 	public AServer() {
-
+		consensusAlgorithm = ConsensusAlgorithm.CENTRALIZED_SYNCHRONOUS;
 	}
 
 	// Set factories for accepting messages
@@ -175,27 +176,53 @@ public class AServer implements Server, RMIValues {
 	}
 	
 	@Override
-	public void proposeAtomicBroadcast(Boolean newValue) {
-		// TODO Auto-generated method stub
-		
+	public synchronized void proposeAtomicBroadcast(Boolean newValue) {
+		boolean stateChange = true;
+		for (GIPCClientCallback callback: GIPCClients.values()) {
+			//Get the return value of each client
+			stateChange &= callback.proposeAtomicBroadcast(newValue);
+		}
+		if (this.consensusAlgorithm == ConsensusAlgorithm.CENTRALIZED_ASYNCHRONOUS)
+			return;
+		if (stateChange) {
+			for (GIPCClientCallback callback: GIPCClients.values()) {
+				callback.proposeAtomicBroadcast(newValue);
+			}		
+		} else {
+			for (GIPCClientCallback callback: GIPCClients.values()) {
+				//Null indicates to reset value to old value
+				callback.proposeAtomicBroadcast(null);
+			}	
+		}
 	}
 
 	@Override
-	public void proposeIPCMechanism(IPCMechanism newValue) {
-		// TODO Auto-generated method stub
-		
+	public synchronized void proposeIPCMechanism(IPCMechanism newValue) {
+		boolean stateChange = true;
+		for (GIPCClientCallback callback: GIPCClients.values()) {
+			//Get the return value of each client
+			stateChange &= callback.proposeIPCMechanism(newValue);
+		}
+		//If we're in async mode, then return after prompting clients
+		if (this.consensusAlgorithm == ConsensusAlgorithm.CENTRALIZED_ASYNCHRONOUS)
+			return;
+		if (stateChange) {
+			for (GIPCClientCallback callback: GIPCClients.values()) {
+				callback.proposeIPCMechanism(newValue);
+			}		
+		} else {
+			for (GIPCClientCallback callback: GIPCClients.values()) {
+				//Null indicates to reset value to old value
+				callback.proposeIPCMechanism(null);
+			}	
+		}	
 	}
 	
-
 	@Override
-	public void proposeConsensusAlgorithm(ConsensusAlgorithm newValue) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	public void proposeCommand(String command) {
-		
+	public synchronized void proposeCommand(String command) {
+		for (GIPCClientCallback callback: GIPCClients.values()) {
+			callback.executeCommand(command);
+		}
 	}
 
 	/**

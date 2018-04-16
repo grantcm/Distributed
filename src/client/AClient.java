@@ -28,6 +28,7 @@ import util.trace.factories.FactoryTraceUtility;
 import util.trace.port.PerformanceExperimentEnded;
 import util.trace.port.PerformanceExperimentStarted;
 import util.trace.port.nio.NIOTraceUtility;
+import util.trace.port.rpc.gipc.GIPCRPCTraceUtility;
 import util.trace.port.rpc.rmi.RMITraceUtility;
 
 @Tags({ DistributedTags.CLIENT, DistributedTags.RMI, DistributedTags.NIO, DistributedTags.GIPC })
@@ -102,7 +103,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	
 	protected void setupGIPC() {
 		try {
-			gipcCallback = new GIPCClientCallback(this);
+			gipcCallback = new AGIPCClientCallback(this);
 			GIPCRegistry gipcRegistry = GIPCLocateRegistry.getRegistry(HOSTNAME, 
 															GIPC_SERVER_PORT, this.getName());
 			proposal = (GIPCProposal) gipcRegistry.lookup(GIPCProposal.class, PROPOSAL);
@@ -226,6 +227,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 		BeanTraceUtility.setTracing();
 		NIOTraceUtility.setTracing();
 		RMITraceUtility.setTracing();
+		GIPCRPCTraceUtility.setTracing();
 		Client aClient = new AClient(aClientName);
 		aClient.initialize(aServerHost, aServerPort);
 	}
@@ -250,11 +252,20 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 
 	@Override
 	public void setAtomic(boolean atomic) {
-		this.atomicBroadcast(atomic);;
-		if (atomic) {
-			commandProcessor.setConnectedToSimulation(false);
-		} else {
-			commandProcessor.setConnectedToSimulation(true);
+		if (ipc == IPCMechanism.NIO || ipc == IPCMechanism.RMI) {
+			this.atomicBroadcast(atomic);
+			if (atomic) {
+				commandProcessor.setConnectedToSimulation(false);
+			} else {
+				commandProcessor.setConnectedToSimulation(true);
+			}
+		} else if (ipc == IPCMechanism.GIPC) {
+			try {
+				proposal.proposeAtomicBroadcast(atomic);
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		if (ipc == IPCMechanism.RMI) {

@@ -1,7 +1,6 @@
 package server;
 
 import client.GIPCClientCallback;
-import util.interactiveMethodInvocation.ConsensusAlgorithm;
 import util.interactiveMethodInvocation.IPCMechanism;
 
 public class AGIPCProposal implements GIPCProposal{
@@ -31,10 +30,4 @@ public class AGIPCProposal implements GIPCProposal{
 	public synchronized void proposeIPCMechanism(IPCMechanism newValue) {
 		server.proposeIPCMechanism(newValue);
 	}
-
-	@Override
-	public void proposeConsensusMechanism(ConsensusAlgorithm newValue) {
-		server.proposeConsensusAlgorithm(newValue);
-	}
-
 }

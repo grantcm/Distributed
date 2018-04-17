@@ -43,7 +43,10 @@ import client.ClientCallbackInf;
 import client.GIPCClientCallback;
 import util.trace.port.consensus.ConsensusTraceUtility;
 import util.trace.port.nio.SocketChannelBound;
+import util.trace.port.rpc.gipc.GIPCObjectRegistered;
 import util.trace.port.rpc.gipc.GIPCRPCTraceUtility;
+import util.trace.port.rpc.gipc.GIPCRegistryCreated;
+import util.trace.port.rpc.gipc.GIPCRegistryLocated;
 import util.trace.port.rpc.rmi.RMITraceUtility;
 import util.trace.bean.BeanTraceUtility;
 import util.trace.factories.FactoryTraceUtility;
@@ -168,11 +171,15 @@ public class AServer implements Server, RMIValues {
 	
 	private void setupGIPCRegistry() {
 		GIPCClients = new HashMap<>();
-		gipcRegistry = GIPCLocateRegistry.createRegistry(GIPC_SERVER_PORT);
+		gipcRegistry = GIPCLocateRegistry.createRegistry(RMIValues.GIPC_SERVER_PORT);
+		GIPCRegistryCreated.newCase(gipcRegistry, RMIValues.GIPC_SERVER_PORT);
+		GIPCRegistryLocated.newCase(gipcRegistry, NAME, RMIValues.GIPC_SERVER_PORT, "Server");
 		GIPCProposal proposal = new AGIPCProposal(this);
 		gipcRegistry.rebind(PROPOSAL, proposal);	
+		GIPCObjectRegistered.newCase("Server", PROPOSAL, proposal, gipcRegistry);
 		gipcRegistry.getInputPort()
 		.addConnectionListener(new ATracingConnectionListener(gipcRegistry.getInputPort()));
+		
 	}
 	
 	@Override

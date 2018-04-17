@@ -8,6 +8,7 @@ import inputport.nio.manager.NIOManagerFactory;
 import server.GIPCProposal;
 import server.RMICommandIntf;
 import util.interactiveMethodInvocation.IPCMechanism;
+import util.trace.port.consensus.RemoteProposeRequestSent;
 
 public class ACommandClientSender implements CommandClientSender {
 	private final int atomic = 1;
@@ -42,6 +43,7 @@ public class ACommandClientSender implements CommandClientSender {
 						if(!client.getAtomic())
 							client.executeCommand(message);
 						command.sendCommand(client.getName(), message, client.getAtomic());
+						RemoteProposeRequestSent.newCase(this, "Command", 1, message);
 
 					} catch (RemoteException e) {
 						e.printStackTrace();

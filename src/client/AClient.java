@@ -28,7 +28,9 @@ import util.trace.factories.FactoryTraceUtility;
 import util.trace.port.PerformanceExperimentEnded;
 import util.trace.port.PerformanceExperimentStarted;
 import util.trace.port.nio.NIOTraceUtility;
+import util.trace.port.rpc.gipc.GIPCObjectLookedUp;
 import util.trace.port.rpc.gipc.GIPCRPCTraceUtility;
+import util.trace.port.rpc.gipc.GIPCRegistryLocated;
 import util.trace.port.rpc.rmi.RMITraceUtility;
 
 @Tags({ DistributedTags.CLIENT, DistributedTags.RMI, DistributedTags.NIO, DistributedTags.GIPC })
@@ -106,7 +108,9 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 			gipcCallback = new AGIPCClientCallback(this);
 			GIPCRegistry gipcRegistry = GIPCLocateRegistry.getRegistry(HOSTNAME, 
 															GIPC_SERVER_PORT, this.getName());
+			GIPCRegistryLocated.newCase(gipcRegistry, "Server", GIPC_SERVER_PORT, this.getName());
 			proposal = (GIPCProposal) gipcRegistry.lookup(GIPCProposal.class, PROPOSAL);
+			GIPCObjectLookedUp.newCase(gipcRegistry, proposal, proposal.getClass(), PROPOSAL, gipcRegistry);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

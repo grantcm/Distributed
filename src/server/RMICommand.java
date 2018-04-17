@@ -23,15 +23,15 @@ public class RMICommand implements RMICommandIntf {
 	 */
 	public synchronized void sendCommand(String name, String command, boolean atomic) throws RemoteException {
 		Map<String, ClientCallbackInf> clients = server.getRMIClients();
-		RemoteProposeRequestReceived.newCase(name, "Client", 1, command);
+		RemoteProposeRequestReceived.newCase(this, "Client", 1, command);
 		for (Entry<String, ClientCallbackInf> entry: clients.entrySet()) {
 			String client = entry.getKey();
 			if (command.equals("mode")) {
 				entry.getValue().changeBroadcastMode(atomic);
-				ProposalLearnedNotificationSent.newCase(client, name, 1, atomic);
+				ProposalLearnedNotificationSent.newCase(this, name, 1, atomic);
 			} else if (!client.equals(name) || atomic == true) {
 				entry.getValue().executeCommand(command);
-				ProposalLearnedNotificationSent.newCase(client, name, 1, command);
+				ProposalLearnedNotificationSent.newCase(this, name, 1, command);
 
 			}
 		}

@@ -24,6 +24,9 @@ import util.trace.bean.BeanTraceUtility;
 import util.trace.factories.FactoryTraceUtility;
 import util.trace.port.PerformanceExperimentEnded;
 import util.trace.port.PerformanceExperimentStarted;
+import util.trace.port.consensus.ProposalMade;
+import util.trace.port.consensus.ProposedStateSet;
+import util.trace.port.consensus.RemoteProposeRequestSent;
 import util.trace.port.nio.NIOTraceUtility;
 import util.trace.port.rpc.rmi.RMIObjectLookedUp;
 import util.trace.port.rpc.rmi.RMIRegistryLocated;
@@ -217,6 +220,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	
 	@Override
 	public void executeCommand(String command) {
+		ProposedStateSet.newCase(this, "Command", 1, command);
 		commandProcessor.processCommand(command);
 	}
 
@@ -228,20 +232,28 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 
 	@Override
 	public void setAtomic(boolean atomic) {
-		this.atomicBroadcast(atomic);
 		if (atomic) {
 			commandProcessor.setConnectedToSimulation(false);
 		} else {
 			commandProcessor.setConnectedToSimulation(true);
+			this.atomicBroadcast(atomic);
 		}
 		
 		if (ipc == IPCMechanism.RMI) {
 			try {
+				ProposalMade.newCase(this, this.getName(), 1, atomic);
+				RemoteProposeRequestSent.newCase(this, String.valueOf(atomic), (float) 1, command);
 				command.sendCommand("mode","", atomic);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	@Override
+	public void updateAtomic(boolean atomic) {
+		ProposedStateSet.newCase(this, "Atomic", 1, atomic);
+		this.atomicBroadcast = atomic;
 	}
 	
 	@Override
@@ -251,6 +263,8 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	
 	@Override
 	public void setInputString(String input) {
+		ProposalMade.newCase(this, this.getName(), 1, input);
+		RemoteProposeRequestSent.newCase(this, input, (float) 1, command);
 		commandProcessor.setInputString(input);
 	}
 	

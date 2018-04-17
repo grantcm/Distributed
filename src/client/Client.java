@@ -15,4 +15,5 @@ public interface Client extends SocketChannelConnectListener {
 	public String getName();
 	public void executeCommand(String command);
 	public void runExperiment();
+	void updateAtomic(boolean atomic);
 }

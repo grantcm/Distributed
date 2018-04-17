@@ -3,6 +3,8 @@ package client;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
+import util.trace.port.consensus.ProposalLearnedNotificationReceived;
+
 public class ClientCallback  extends UnicastRemoteObject implements ClientCallbackInf {
 
 	/**
@@ -17,12 +19,14 @@ public class ClientCallback  extends UnicastRemoteObject implements ClientCallba
 	
 	@Override
 	public void executeCommand(String command) throws RemoteException {
+		ProposalLearnedNotificationReceived.newCase(this, "Command", 1, command);
 		client.executeCommand(command);
 	}
 
 	@Override
 	public void changeBroadcastMode(boolean mode) throws RemoteException {
-		client.setAtomic(mode);
+		ProposalLearnedNotificationReceived.newCase(this, "Atomic", 1, mode);
+		client.updateAtomic(mode);
 	}
 
 }

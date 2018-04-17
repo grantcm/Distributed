@@ -8,6 +8,7 @@ import inputport.nio.manager.NIOManagerFactory;
 import server.RMICommandIntf;
 import util.interactiveMethodInvocation.IPCMechanism;
 import util.trace.bean.NotifiedPropertyChangeEvent;
+import util.trace.port.consensus.ProposalMade;
 import util.trace.port.consensus.RemoteProposeRequestSent;
 
 public class ACommandClientSender implements CommandClientSender {
@@ -33,7 +34,6 @@ public class ACommandClientSender implements CommandClientSender {
 						String message = (String) evt.getNewValue();
 						if(!client.getAtomic())
 							client.executeCommand(message);
-						RemoteProposeRequestSent.newCase(client.getName(), message, (float) 1, command);
 						command.sendCommand(client.getName(), message, client.getAtomic());
 
 					} catch (RemoteException e) {

@@ -37,11 +37,14 @@ import java.rmi.server.UnicastRemoteObject;
 
 import assignments.util.mainArgs.ServerArgsProcessor;
 import client.ClientCallbackInf;
+import util.trace.port.consensus.ConsensusTraceUtility;
 import util.trace.port.nio.NIOTraceUtility;
 import util.trace.port.nio.SocketChannelBound;
+import util.trace.port.rpc.rmi.RMIRegistryLocated;
 import util.trace.port.rpc.rmi.RMITraceUtility;
 import util.trace.bean.BeanTraceUtility;
 import util.trace.factories.FactoryTraceUtility;
+import util.trace.misc.ThreadDelayed;
 import util.annotations.Tags;
 import util.tags.DistributedTags;
 
@@ -136,6 +139,7 @@ public class AServer implements Server, RMIValues {
 		readThread.start();
 		try {
 			Registry rmiRegistry = LocateRegistry.getRegistry(REGISTRY_PORT_NUMBER);
+			RMIRegistryLocated.newCase(this , "Server",REGISTRY_PORT_NUMBER, rmiRegistry);
 			IAmInterface identity = new IAmCommand(this);
 			RMICommandIntf command = new RMICommand(this);
 			UnicastRemoteObject.exportObject(identity, 0);
@@ -171,6 +175,8 @@ public class AServer implements Server, RMIValues {
 		BeanTraceUtility.setTracing();
 		NIOTraceUtility.setTracing();
 		RMITraceUtility.setTracing();
+		ConsensusTraceUtility.setTracing();
+		ThreadDelayed.enablePrint();
 		AServer aServer = new AServer();
 		args = ServerArgsProcessor.removeEmpty(args);
 		aServer.initialize(ServerArgsProcessor.getServerPort(args));

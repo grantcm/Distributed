@@ -25,6 +25,8 @@ import util.trace.factories.FactoryTraceUtility;
 import util.trace.port.PerformanceExperimentEnded;
 import util.trace.port.PerformanceExperimentStarted;
 import util.trace.port.nio.NIOTraceUtility;
+import util.trace.port.rpc.rmi.RMIObjectLookedUp;
+import util.trace.port.rpc.rmi.RMIRegistryLocated;
 import util.trace.port.rpc.rmi.RMITraceUtility;
 
 @Tags({ DistributedTags.CLIENT })
@@ -85,8 +87,10 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 		try {
 			rmiCallback = new ClientCallback(this);
 			Registry rmiRegistry = LocateRegistry.getRegistry(REGISTRY_PORT_NUMBER);
+			RMIRegistryLocated.newCase(this, "Server", REGISTRY_PORT_NUMBER, rmiRegistry);
 			identity = (IAmInterface) rmiRegistry.lookup(IAM);
 			command = (RMICommandIntf) rmiRegistry.lookup(COMMAND);
+			RMIObjectLookedUp.newCase(this, command, COMMAND, rmiRegistry);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -7,6 +7,8 @@ import java.rmi.RemoteException;
 import inputport.nio.manager.NIOManagerFactory;
 import server.RMICommandIntf;
 import util.interactiveMethodInvocation.IPCMechanism;
+import util.trace.bean.NotifiedPropertyChangeEvent;
+import util.trace.port.consensus.RemoteProposeRequestSent;
 
 public class ACommandClientSender implements CommandClientSender {
 	private final int atomic = 1;
@@ -23,6 +25,7 @@ public class ACommandClientSender implements CommandClientSender {
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (evt.getPropertyName().equals("InputString")) {
+			//NotifiedPropertyChangeEvent.newCase(this, evt, this);
 			if (!client.getLocal()) {
 				if (client.getIPC() == IPCMechanism.RMI) {
 					//RMI
@@ -30,6 +33,7 @@ public class ACommandClientSender implements CommandClientSender {
 						String message = (String) evt.getNewValue();
 						if(!client.getAtomic())
 							client.executeCommand(message);
+						RemoteProposeRequestSent.newCase(client.getName(), message, (float) 1, command);
 						command.sendCommand(client.getName(), message, client.getAtomic());
 
 					} catch (RemoteException e) {

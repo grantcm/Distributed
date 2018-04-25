@@ -22,6 +22,7 @@ import util.interactiveMethodInvocation.IPCMechanism;
 import util.tags.DistributedTags;
 import util.trace.bean.BeanTraceUtility;
 import util.trace.factories.FactoryTraceUtility;
+import util.trace.misc.ThreadDelayed;
 import util.trace.port.PerformanceExperimentEnded;
 import util.trace.port.PerformanceExperimentStarted;
 import util.trace.port.consensus.ProposalMade;
@@ -207,6 +208,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 		BeanTraceUtility.setTracing();
 		NIOTraceUtility.setTracing();
 		RMITraceUtility.setTracing();
+		ThreadDelayed.enablePrint();
 		Client aClient = new AClient(aClientName);
 		aClient.initialize(aServerHost, aServerPort);
 	}
@@ -243,7 +245,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 			try {
 				ProposalMade.newCase(this, this.getName(), 1, atomic);
 				RemoteProposeRequestSent.newCase(this, String.valueOf(atomic), (float) 1, command);
-				command.sendCommand("mode","", atomic);
+				command.sendCommand("","mode", atomic);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}

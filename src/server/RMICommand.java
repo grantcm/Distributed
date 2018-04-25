@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import client.ClientCallbackInf;
 import util.trace.port.consensus.ProposalLearnedNotificationSent;
 import util.trace.port.consensus.RemoteProposeRequestReceived;
+import util.trace.port.consensus.communication.CommunicationStateNames;
 
 public class RMICommand implements RMICommandIntf {
 
@@ -28,10 +29,10 @@ public class RMICommand implements RMICommandIntf {
 			String client = entry.getKey();
 			if (command.equals("mode")) {
 				entry.getValue().changeBroadcastMode(atomic);
-				ProposalLearnedNotificationSent.newCase(this, name, 1, atomic);
+				ProposalLearnedNotificationSent.newCase(this, CommunicationStateNames.BROADCAST_MODE, 1, atomic);
 			} else if (!client.equals(name) || atomic == true) {
 				entry.getValue().executeCommand(command);
-				ProposalLearnedNotificationSent.newCase(this, name, 1, command);
+				ProposalLearnedNotificationSent.newCase(this, CommunicationStateNames.COMMAND, 1, command);
 
 			}
 		}

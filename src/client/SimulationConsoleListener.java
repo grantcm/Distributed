@@ -11,7 +11,7 @@ import util.interactiveMethodInvocation.SimulationParametersController;
 
 public class SimulationConsoleListener extends ACommandToMethodCallTranslator implements SimulationParametersController {
 
-	protected List<SimulationParametersListener> simulationParameterListener = new ArrayList();
+	protected List<SimulationParametersListener> simulationParameterListener = new ArrayList<SimulationParametersListener>();
 	
 	public void addSimulationParameterListener(SimulationParametersListener aListener){
 		simulationParameterListener.add(aListener);

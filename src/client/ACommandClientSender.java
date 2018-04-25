@@ -31,11 +31,16 @@ public class ACommandClientSender implements CommandClientSender {
 				if (client.getIPC() == IPCMechanism.GIPC) {
 					//GIPC
 					try {
+						if (client.isWaitForAtomic()){
+							System.out.println("Command ignored");
+							return;
+						}
 						proposal.proposeCommand((String) evt.getNewValue());
 					} catch (RemoteException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					System.out.println("Simulation Returned");
 				} else if (client.getIPC() == IPCMechanism.RMI) {
 					//RMI
 					try {

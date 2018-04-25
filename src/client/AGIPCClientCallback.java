@@ -35,7 +35,7 @@ public class AGIPCClientCallback implements GIPCClientCallback {
 			}
 		} else {
 			if (newValue != null)
-				client.setAtomic(newValue);
+				client.setAtomicBroadcast(newValue);
 			return true;
 		}
 			

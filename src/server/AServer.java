@@ -154,7 +154,7 @@ public class AServer implements Server, RMIValues {
 	
 	private void setupRMIRegistry() {
 		try {
-			Registry rmiRegistry = LocateRegistry.getRegistry(REGISTRY_PORT_NUMBER);
+			Registry rmiRegistry = LocateRegistry.getRegistry(RMIValues.HOSTNAME, REGISTRY_PORT_NUMBER);
 			IAmInterface identity = new IAmCommand(this);
 			RMICommandIntf command = new RMICommand(this);
 			UnicastRemoteObject.exportObject(identity, 0);
@@ -162,6 +162,7 @@ public class AServer implements Server, RMIValues {
 			rmiRegistry.rebind(IAM, identity);
 			rmiRegistry.rebind(COMMAND, command);
 		} catch (Exception e) {
+			System.out.println(e);
 		}
 	}
 	
@@ -252,12 +253,12 @@ public class AServer implements Server, RMIValues {
 	}
 
 	public static void main(String[] args) {
-		FactoryTraceUtility.setTracing();
-		BeanTraceUtility.setTracing();
-		RMITraceUtility.setTracing();
-		ConsensusTraceUtility.setTracing();
-		ThreadDelayed.enablePrint();
-		GIPCRPCTraceUtility.setTracing();
+//		FactoryTraceUtility.setTracing();
+//		BeanTraceUtility.setTracing();
+//		RMITraceUtility.setTracing();
+//		ConsensusTraceUtility.setTracing();
+//		ThreadDelayed.enablePrint();
+//		GIPCRPCTraceUtility.setTracing();
 		AServer aServer = new AServer();
 		args = ServerArgsProcessor.removeEmpty(args);
 		aServer.initialize(ServerArgsProcessor.getServerPort(args));

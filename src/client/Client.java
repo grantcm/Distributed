@@ -15,6 +15,7 @@ public interface Client extends SocketChannelConnectListener, SimulationParamete
 	public IPCMechanism getIPC();
 	public String getName();
 	public void executeCommand(String command);
-	public void runExperiment();
+	public double runExperiment();
 	public boolean isWaitForConsensusAlgorithm();
+	public boolean isWaitForAtomic();
 }

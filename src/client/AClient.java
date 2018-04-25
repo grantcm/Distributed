@@ -21,6 +21,7 @@ import server.RMICommandIntf;
 import server.RMIValues;
 import stringProcessors.HalloweenCommandProcessor;
 import util.annotations.Tags;
+import util.interactiveMethodInvocation.ConsensusAlgorithm;
 import util.interactiveMethodInvocation.IPCMechanism;
 import util.tags.DistributedTags;
 import util.trace.bean.BeanTraceUtility;
@@ -87,19 +88,45 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 		commandExecutor.start();
 		consoleListener = new SimulationConsoleListener();
 		consoleListener.addSimulationParameterListener(new ParameterListener(this));
-		consoleListener.processCommands();
+		//consoleListener.processCommands();
+		runTests();
+	}
+	
+	private void runTests() {
+		this.localProcessingOnly = true;
+		System.out.println("Local only took: "+ runExperiment());
+		
+		this.ipc = IPCMechanism.NIO;
+		runTestsBroadcastMode();
+		this.ipc = IPCMechanism.RMI;
+		runTestsBroadcastMode();
+		this.ipc = IPCMechanism.GIPC;
+		runTestsBroadcastMode();
+		quit(0);
+	}
+	
+	private void runTestsBroadcastMode() {
+		try {
+			this.localProcessingOnly = false;
+			this.atomicBroadcast = true;
+			System.out.println("Atomic true took: " + runExperiment());
+			Thread.sleep(5000);
+			this.atomicBroadcast = false;
+			System.out.println("Atomic false took: " + runExperiment());
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			
+		}
 	}
 	
 	protected void setupRMI() {
-		if (this.getIPC() == IPCMechanism.RMI) {
-			try {
-				rmiCallback = new ClientCallback(this);
-				Registry rmiRegistry = LocateRegistry.getRegistry(REGISTRY_PORT_NUMBER);
-				identity = (IAmInterface) rmiRegistry.lookup(IAM);
-				command = (RMICommandIntf) rmiRegistry.lookup(COMMAND);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		try {
+			rmiCallback = new ClientCallback(this);
+			Registry rmiRegistry = LocateRegistry.getRegistry(RMIValues.HOSTNAME, REGISTRY_PORT_NUMBER);
+			identity = (IAmInterface) rmiRegistry.lookup(IAM);
+			command = (RMICommandIntf) rmiRegistry.lookup(COMMAND);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -123,6 +150,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 		commandProcessor = BeauAndersonFinalProject.createSimulation(clientName, 0, 0, 400, 200, 100, 100);
 		commandProcessor.setConnectedToSimulation(false);
 		this.atomicBroadcast = true;
+		this.consensusAlgorithm = ConsensusAlgorithm.CENTRALIZED_SYNCHRONOUS;
 	}
 
 	@Override
@@ -227,11 +255,11 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	 * Connect the client with the specified name to the specified server.
 	 */
 	public static void launchClient(String aServerHost, int aServerPort, String aClientName) {
-		FactoryTraceUtility.setTracing();
-		BeanTraceUtility.setTracing();
-		NIOTraceUtility.setTracing();
-		RMITraceUtility.setTracing();
-		GIPCRPCTraceUtility.setTracing();
+//		FactoryTraceUtility.setTracing();
+//		BeanTraceUtility.setTracing();
+//		NIOTraceUtility.setTracing();
+//		RMITraceUtility.setTracing();
+//		GIPCRPCTraceUtility.setTracing();
 		Client aClient = new AClient(aClientName);
 		aClient.initialize(aServerHost, aServerPort);
 	}
@@ -292,10 +320,10 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	}
 	
 	@Override
-	public void runExperiment(){
+	public double runExperiment(){
 		long end, duration;
 		long start = System.nanoTime();
-		String command = "move 1 1";
+		String command = "move 1 0";
 
 		PerformanceExperimentStarted.newCase(this, start, EXPERIMENT_TRIALS);
 		
@@ -306,7 +334,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 		end = System.nanoTime();
 		duration = end-start;
 		PerformanceExperimentEnded.newCase(this, start, end, duration, EXPERIMENT_TRIALS);
-		//System.out.println("Experiment took: " + (double)(duration/1000000000.0));
+		return (double) (duration/1000000000.0);
 	}
 
 	@Override
@@ -322,6 +350,11 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	@Override
 	public boolean getAtomic() {
 		return this.isAtomicBroadcast();
+	}
+	
+	@Override
+	public boolean isWaitForAtomic() {
+		return this.atomicBroadcast == null ? true : false;
 	}
 
 	@Override

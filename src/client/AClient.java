@@ -84,7 +84,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 		commandQueue = new ArrayBlockingQueue<ClientCommandObject>(COMMAND_QUEUE_SIZE);
 		createCommunicationObjects();
 		addListeners();
-		connectToServer(aServerHost, aServerPort);
+		connectToServer(RMIValues.HOSTNAME, RMIValues.NIO_PORT_NUMBER);
 		commandExecutor.start();
 		consoleListener = new SimulationConsoleListener();
 		consoleListener.addSimulationParameterListener(new ParameterListener(this));
@@ -133,7 +133,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 	protected void setupGIPC() {
 		try {
 			gipcCallback = new AGIPCClientCallback(this);
-			GIPCRegistry gipcRegistry = GIPCLocateRegistry.getRegistry(HOSTNAME, 
+			GIPCRegistry gipcRegistry = GIPCLocateRegistry.getRegistry(RMIValues.HOSTNAME, 
 															GIPC_SERVER_PORT, this.getName());
 			GIPCRegistryLocated.newCase(gipcRegistry, "Server", GIPC_SERVER_PORT, this.getName());
 			proposal = (GIPCProposal) gipcRegistry.lookup(GIPCProposal.class, PROPOSAL);
@@ -216,7 +216,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 
 	@Override
 	public void connectToServer(String aServerHost, int aServerPort) {
-		connectToSocketChannel(aServerHost, aServerPort);
+		connectToSocketChannel(RMIValues.HOSTNAME, aServerPort);
 		if (this.getIPC() == IPCMechanism.RMI) {
 			try {
 				identity.IAm(clientName, rmiCallback);
@@ -234,7 +234,7 @@ public class AClient extends AnAbstractSimulationParametersBean implements Clien
 
 	protected void connectToSocketChannel(String aServerHost, int aServerPort) {
 		try {
-			InetAddress aServerAddress = InetAddress.getByName(aServerHost);
+			InetAddress aServerAddress = InetAddress.getByName(RMIValues.HOSTNAME);
 			NIOManagerFactory.getSingleton().connect(socketChannel, aServerAddress, aServerPort, this);
 		} catch (IOException e) {
 			e.printStackTrace();

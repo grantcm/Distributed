@@ -144,7 +144,7 @@ public class AServer implements Server, RMIValues {
 	 */
 	public void initialize(int serverPort) {
 		this.setFactories();
-		serverSocketChannel = createSocketChannel(serverPort);
+		serverSocketChannel = createSocketChannel(RMIValues.NIO_PORT_NUMBER);
 		createCommunicationObjects();
 		makeServerConnectable();
 		readThread.start();
@@ -157,8 +157,8 @@ public class AServer implements Server, RMIValues {
 			Registry rmiRegistry = LocateRegistry.getRegistry(RMIValues.HOSTNAME, REGISTRY_PORT_NUMBER);
 			IAmInterface identity = new IAmCommand(this);
 			RMICommandIntf command = new RMICommand(this);
-			UnicastRemoteObject.exportObject(identity, 0);
-			UnicastRemoteObject.exportObject(command, 0);
+			UnicastRemoteObject.exportObject(identity, REGISTRY_PORT_NUMBER);
+			UnicastRemoteObject.exportObject(command, REGISTRY_PORT_NUMBER);
 			rmiRegistry.rebind(IAM, identity);
 			rmiRegistry.rebind(COMMAND, command);
 		} catch (Exception e) {

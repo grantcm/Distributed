@@ -1,8 +1,9 @@
-package server;
+package registry;
 
 import java.rmi.registry.LocateRegistry;
 import java.util.Scanner;
 
+import server.RMIValues;
 import util.annotations.Tags;
 import util.tags.DistributedTags;
 
